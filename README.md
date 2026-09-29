@@ -1,29 +1,28 @@
 # NOVA Sentinel
 
-Ein kleines Tool, das einen selbst gewaehlten Bildschirmbereich per Screenshot
-und OCR ausliest (z. B. eine Item-Anzahl oder das Traggewicht in einem Spiel)
-und warnt, wenn ein Wert eine Schwelle unter- bzw. ueberschreitet. Steuerung
-und Anzeige laufen ueber ein kleines Web-Dashboard, das im eigenen WLAN
-erreichbar ist (z. B. vom Handy aus).
+A small tool that reads a self-selected screen area via screenshot and OCR
+(e.g. an item count or carry weight in a game) and warns when a value goes
+above or below a threshold. Control and display happen through a small web
+dashboard, reachable on your own WiFi network (e.g. from your phone).
 
-**von Grigorios Gkisios ~ Hobby Developer**
+**by Grigorios Gkisios ~ Hobby Developer**
 
-Bei der Entwicklung habe ich zusaetzlich ein KI-Werkzeug (Claude von Anthropic)
-genutzt, ganz normal in der heutigen Zeit. Konzept, Anforderungen, Architektur-
-Entscheidungen, Fehlersuche und das komplette Testen kamen von mir, die KI hat
-beim Schreiben des Codes nach meinen Vorgaben unterstuetzt.
+I additionally used an AI tool (Claude by Anthropic) during development,
+which is pretty normal these days. Concept, requirements, architecture
+decisions, debugging, and all testing came from me; the AI assisted with
+writing the code based on my specifications.
 
 ---
 
-## Funktionen
+## Features
 
-- Live-Ueberwachung von zwei Werten gleichzeitig (z. B. Item-Bestand und Traggewicht)
-- Interaktive Zielauswahl per Rechteck-Ziehen ("TARGET LOCK"), kein manuelles
-  Eintragen von Bildschirmkoordinaten noetig
-- Ampel-Farben und akustische Warnung bei kritischen Werten, mit
-  unterschiedlichen Toenen je nach Ereignis
-- Web-Dashboard (per Browser erreichbar, keine App-Installation noetig)
-- Optional HTTPS mit selbstsigniertem Zertifikat
+- Live monitoring of two values at once (e.g. item stock and carry weight)
+- Interactive target selection by dragging a rectangle ("TARGET LOCK"), no
+  need to manually enter screen coordinates
+- Traffic-light colors and audible warnings for critical values, with
+  different tones depending on the event
+- Web dashboard (accessible via browser, no app installation needed)
+- Optional HTTPS with a self-signed certificate
 
 ## Installation
 
@@ -31,8 +30,8 @@ beim Schreiben des Codes nach meinen Vorgaben unterstuetzt.
 pip install mss pillow pytesseract cryptography
 ```
 
-Zusaetzlich wird [Tesseract OCR](https://github.com/UB-Mannheim/tesseract/wiki)
-als separates Programm benoetigt (nicht ueber pip installierbar).
+[Tesseract OCR](https://github.com/UB-Mannheim/tesseract/wiki) is also
+required as a separate program (not installable via pip).
 
 ## Start
 
@@ -40,40 +39,38 @@ als separates Programm benoetigt (nicht ueber pip installierbar).
 python zahl_warner_app.py
 ```
 
-Die angezeigte Adresse im Browser (PC oder Handy im selben WLAN) oeffnen.
+Open the displayed address in a browser (PC or phone on the same WiFi).
 
 ---
 
-## Datenschutz / Verarbeitung von Daten
+## Privacy / Data Handling
 
-Dieses Tool sammelt, speichert oder ueberträgt **keinerlei Daten an Dritte
-oder an den Entwickler**. Deshalb wird bewusst auf eine separate
-Datenschutzerklaerung verzichtet:
+This tool does not collect, store, or transmit any data to third parties or
+to the developer. That's why a separate privacy policy is deliberately
+omitted:
 
-- Alle Screenshots und erkannten Werte werden **ausschliesslich lokal auf dem
-  eigenen Rechner** verarbeitet (Texterkennung per Tesseract, ebenfalls lokal).
-- Die Web-Oberflaeche ist **nur innerhalb des eigenen Heimnetzwerks (WLAN)**
-  erreichbar, es gibt keinen externen Server und keine Cloud-Anbindung.
-- Es werden **keine Accountdaten, Passwoerter oder personenbezogene Daten**
-  verarbeitet oder gespeichert.
-- Der Entwickler hat **keinerlei Zugriff** auf die Daten oder Nutzung anderer
-  Personen, die dieses Tool verwenden.
+- All screenshots and recognized values are processed **exclusively locally
+  on your own machine** (text recognition via Tesseract, also local).
+- The web interface is **only reachable within your own home network
+  (WiFi)** — there is no external server and no cloud connection.
+- **No account data, passwords, or personal data** are processed or stored.
+- The developer has **no access whatsoever** to the data or usage of other
+  people who use this tool.
 
-Da keine Datenverarbeitung im Sinne der DSGVO durch den Anbieter/Entwickler
-stattfindet (das Tool ist reine, lokal laufende Software ohne
-Server-Komponente), ist keine Datenschutzerklaerung erforderlich. Dies ist
-keine Rechtsberatung, sondern eine transparente Einordnung der
-Funktionsweise.
+Since no data processing in the sense of the GDPR takes place by the
+provider/developer (this tool is purely local software with no server
+component), no privacy policy is required. This is not legal advice, just a
+transparent explanation of how the tool works.
 
-## Hinweis zu Nutzungsbedingungen von Drittanbieter-Spielen
+## Note on Third-Party Game Terms of Service
 
-Dieses Tool interagiert nicht mit Spielprozessen (keine Eingaben, kein
-Speicherzugriff, keine Client-Modifikation) und liest ausschliesslich
-eigene Bildschirmbereiche per Screenshot aus. Trotzdem koennen die
-Nutzungsbedingungen einzelner Spiele oder Plattformen zusaetzliche Software
-generell einschraenken. Es liegt in der Verantwortung der nutzenden Person,
-dies vor dem Einsatz mit dem jeweiligen Anbieter zu klaeren.
+This tool does not interact with game processes (no input injection, no
+memory access, no client modification) and only reads screen areas of your
+own screen via screenshot. That said, the terms of service of individual
+games or platforms may still restrict third-party software in general. It
+is the responsibility of the user to clarify this with the relevant
+provider before use.
 
-## Lizenz
+## License
 
-Nutzung auf eigene Verantwortung. Kein Support- oder Gewaehrleistungsanspruch.
+Use at your own risk. No support or warranty claims.
