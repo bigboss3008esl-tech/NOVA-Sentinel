@@ -1,20 +1,20 @@
 """
-NOVA SENTINEL - Live-Ueberwachung von Item-Menge UND Traggewicht.
+NOVA SENTINEL - Live monitoring of item count AND carry weight.
 
-Ablauf:
-  1. Beim Start (oder per TARGET LOCK-Knopf in der App) oeffnet sich ein
-     kleines Hover-Menue oben am PC-Bildschirm mit 3 Knoepfen:
-       1) Item-Menge Ziel setzen
-       2) Traggewicht Ziel setzen
-       3) Uebernehmen (erst aktiv, wenn beide gesetzt sind)
-     ESC waehrend einer Rechteck-Auswahl bricht nur DIESE Auswahl ab und
-     kehrt zum Hover-Menue zurueck, es schliesst nicht alles.
-  2. Nach "Uebernehmen" liest das Programm live und dauerhaft beide Werte
-     (Vorschau, kein Alarm), damit man die Erkennung pruefen kann.
-  3. Erst nach Druck auf "Start" in der App wird der Alarm scharf geschaltet.
+Flow:
+  1. On start (or via the TARGET LOCK button in the app) a small hover menu
+     opens at the top of the PC screen with 3 buttons:
+       1) Set item-count target
+       2) Set carry-weight target
+       3) Confirm (only active once both are set)
+     Pressing ESC during a rectangle selection only cancels THAT selection
+     and returns to the hover menu, it does not close everything.
+  2. After "Confirm", the program reads both values live and continuously
+     (preview mode, no alarm), so you can check that recognition works.
+  3. Only after pressing "Start" in the app is the alarm armed.
 
 Installation (Windows):
-  1. Tesseract OCR installieren: https://github.com/UB-Mannheim/tesseract/wiki
+  1. Install Tesseract OCR: https://github.com/UB-Mannheim/tesseract/wiki
   2. pip install mss pillow pytesseract
 Start: python zahl_warner_app.py
 """
@@ -36,25 +36,25 @@ from PIL import Image, ImageOps, ImageTk
 
 try:
     import ctypes
-    ctypes.windll.shcore.SetProcessDpiAwareness(2)  # PER_MONITOR_AWARE, wichtig bei Skalierung
+    ctypes.windll.shcore.SetProcessDpiAwareness(2)  # PER_MONITOR_AWARE, important for display scaling
 except Exception:
-    pass  # nicht Windows, oder aeltere Windows-Version ohne diese Funktion
+    pass  # not Windows, or an older Windows version without this function
 
 pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
 
-# ---- EINSTELLUNGEN ----
-LOW = 30                  # Warnschwelle Item-Menge (auch in der App aenderbar)
+# ---- SETTINGS ----
+LOW = 30                  # item-count warning threshold (also changeable in the app)
 OK = 50
-MAXWERT = 3110             # Fortschrittsbalken-Maximum fuer die Item-Menge
-MAX_GEWICHT = 3110         # Start-Maximalgewicht (in der App aenderbar)
-GEWICHT_GELB = 70          # ab % gelb + Melodie
-GEWICHT_ROT = 85           # ab % rot + Alarmton
+MAXWERT = 3110             # progress bar maximum for the item count
+MAX_GEWICHT = 3110         # starting max weight (changeable in the app)
+GEWICHT_GELB = 70          # yellow + melody from this %
+GEWICHT_ROT = 85           # red + alarm tone from this %
 INTERVAL = 1.0
 WIEDERHOLUNG = 60
 PORT = 8787
-ITEM_NAME = "Ware"
+ITEM_NAME = "Item"
 ALARM_TON = True
-USE_HTTPS = True   # selbstsigniertes Zertifikat, Browser zeigt trotzdem eine Warnung (siehe Chat)
+USE_HTTPS = True   # self-signed certificate, the browser will still show a warning (see chat)
 # -----------------------
 SCHEMA = "https" if USE_HTTPS else "http"
 
@@ -67,7 +67,7 @@ state = {
     # modus: "auswahl" (kein Ziel gewaehlt) | "vorschau" (liest live, kein Alarm)
     #      | "aktiv" (Alarm scharf) | "gestoppt" (angehalten)
     "modus": "auswahl",
-    "pick_requested": True,   # startet automatisch mit dem Hover-Menue
+    "pick_requested": True,   # starts automatically with the hover menu
     "picking": False,
     "max_auto_pending": False,
 }
@@ -129,7 +129,7 @@ def sicherstelle_zertifikat():
     return cert_pfad, key_pfad
 
 
-HTML = """<!doctype html><html lang="de"><head><meta charset="utf-8">
+HTML = """<!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>NOVA Sentinel</title><style>
 :root{color-scheme:dark}
@@ -200,13 +200,13 @@ button:disabled{opacity:.4;cursor:not-allowed}
 <div class="win" id="win">
 <div class="bar"><span id="dot" class="dot"></span> <span>NOVA SENTINEL</span></div>
 <div class="body">
- <div class="status" id="statusbox">Initialisiere ...</div>
+ <div class="status" id="statusbox">Initializing ...</div>
 
  <div class="big" id="wert">-</div>
  <div class="sub" id="name"></div>
  <div class="sub" id="rate"></div>
  <div class="progwrap">
-  <div class="plabel"><span>BESTAND</span><span id="pproz">-</span></div>
+  <div class="plabel"><span>STOCK</span><span id="pproz">-</span></div>
   <div class="ptrack"><div class="pfill" id="pfill" style="width:0%"></div></div>
   <div class="plabel"><span id="pzahlen"></span><span></span></div>
  </div>
@@ -216,7 +216,7 @@ button:disabled{opacity:.4;cursor:not-allowed}
  </div></div>
 
  <div class="gewicht-box">
-  <div class="gewicht-titel">TRAGGEWICHT</div>
+  <div class="gewicht-titel">CARRY WEIGHT</div>
   <div class="gewicht-row">
    <svg class="blob" id="blobsvg" viewBox="0 0 100 100">
     <ellipse cx="50" cy="58" rx="34" ry="30" id="blobBody" fill="#5ad16a"/>
@@ -230,33 +230,33 @@ button:disabled{opacity:.4;cursor:not-allowed}
    <div class="gtrack"><div class="gfill" id="gfill" style="width:0%"></div></div>
    <div class="gproz" id="gproz">-</div>
   </div>
-  <div class="gsub" id="gsub">Ziel noch nicht kalibriert</div>
+  <div class="gsub" id="gsub">Target not calibrated yet</div>
  </div>
 
- <div class="log" id="log">Warte auf Daten ...</div>
+ <div class="log" id="log">Waiting for data ...</div>
  <div class="ip" id="ip"></div>
 
  <div class="advanced" id="advanced">
   <div class="row" style="margin-top:14px">
-   <label>Max. Bestand</label>
+   <label>Max. Stock</label>
    <div style="display:flex;gap:8px">
     <input type="number" id="maxbestand">
     <button onclick="setMaxBestand()">OK</button>
    </div>
   </div>
   <div style="font-size:11px;color:#7fa8d9;margin:-8px 0 10px">
-   Wird bei TARGET LOCK automatisch aus der ersten erkannten Zahl gesetzt.
-   Nur eintragen, wenn du den Bestand zwischendurch wieder aufgefuellt hast.
+   Automatically set from the first recognized number during TARGET LOCK.
+   Only enter a value here if you've restocked in the meantime.
   </div>
   <div class="row">
-   <label>Warnen bei (Item)</label>
+   <label>Warn at (Item)</label>
    <div style="display:flex;gap:8px">
     <input type="number" id="schwelle">
     <button onclick="setSchwelle()">OK</button>
    </div>
   </div>
   <div class="row">
-   <label>Max. Traggewicht</label>
+   <label>Max. Carry Weight</label>
    <div style="display:flex;gap:8px">
     <input type="number" id="maxgewicht">
     <button onclick="setMaxGewicht()">OK</button>
@@ -264,7 +264,7 @@ button:disabled{opacity:.4;cursor:not-allowed}
   </div>
   <div class="btns">
    <button id="btnStart" onclick="steuere('start')">Start</button>
-   <button onclick="steuere('stop')">Stopp</button>
+   <button onclick="steuere('stop')">Stop</button>
   </div>
   <div class="btns">
    <button onclick="zielLock()" style="flex:1;background:#1f6b3f;border:1px solid #3ddc73">&#127919; TARGET LOCK</button>
@@ -277,10 +277,10 @@ button:disabled{opacity:.4;cursor:not-allowed}
 <script>
 let letzteSchwelle=null, letzterMaxGewicht=null, maxBestandBearbeitet=false;
 const TEXTE={
- auswahl:"KEIN ZIEL GEWAEHLT - Bitte TARGET LOCK nutzen",
- vorschau:"VORSCHAU - Erkennung wird getestet (kein Alarm)",
- aktiv:"AKTIV - Ueberwachung laeuft",
- gestoppt:"ANGEHALTEN",
+ auswahl:"NO TARGET SET - Please use TARGET LOCK",
+ vorschau:"PREVIEW - Testing recognition (no alarm)",
+ aktiv:"ACTIVE - Monitoring running",
+ gestoppt:"STOPPED",
 };
 let advOpen=false;
 function toggleAdvanced(){
@@ -289,10 +289,10 @@ function toggleAdvanced(){
  document.getElementById("toggleBtn").innerHTML = advOpen ? "&#9660;" : "&#9650;";
 }
 function fmtZeit(min){
- if(min===null)return "unbekannt";
- if(min<1)return "< 1 Min.";
- if(min<60)return min.toFixed(0)+" Min.";
- return (min/60).toFixed(1)+" Std.";
+ if(min===null)return "unknown";
+ if(min<1)return "< 1 min";
+ if(min<60)return min.toFixed(0)+" min";
+ return (min/60).toFixed(1)+" h";
 }
 function updateBlob(proz){
   const body=document.getElementById("blobBody"), mund=document.getElementById("blobMund"),
@@ -326,8 +326,8 @@ async function tick(){
   let statusText=TEXTE[d.modus]||d.modus;
   if(d.modus==="vorschau"){
     statusText = (d.wert!==null && d.gewicht!==null)
-      ? "VORSCHAU - Item: "+d.wert+" | Gewicht: "+d.gewicht+" \\u2713 Bereit zum Start"
-      : "VORSCHAU - Erkennung laeuft, bitte pruefen";
+      ? "PREVIEW - Item: "+d.wert+" | Weight: "+d.gewicht+" \\u2713 Ready to start"
+      : "PREVIEW - Recognition running, please check";
   }
   sbox.textContent=statusText;
   document.getElementById("btnStart").disabled = (d.modus==="auswahl"||d.modus==="picking");
@@ -346,7 +346,7 @@ async function tick(){
   document.getElementById("pproz").textContent=proz.toFixed(1)+" %";
   document.getElementById("pzahlen").textContent=(d.wert===null?"-":d.wert)+" / "+d.max;
   document.getElementById("rate").textContent =
-    "Verbrauch: "+d.rate_pro_min.toFixed(1)+" / Min. \\u00b7 Restzeit bis leer: ca. "+fmtZeit(d.restzeit_min);
+    "Consumption: "+d.rate_pro_min.toFixed(1)+" / min \\u00b7 Time until empty: approx. "+fmtZeit(d.restzeit_min);
 
   let gproz=null;
   if(d.gewicht!==null && d.max_gewicht){
@@ -355,7 +355,7 @@ async function tick(){
   const gfill=document.getElementById("gfill");
   if(gproz===null){
     gfill.style.width="0%"; document.getElementById("gproz").textContent="-";
-    document.getElementById("gsub").textContent = d.region_gewicht ? "Warte auf Erkennung ..." : "Ziel noch nicht kalibriert";
+    document.getElementById("gsub").textContent = d.region_gewicht ? "Waiting for recognition ..." : "Target not calibrated yet";
   } else {
     gfill.style.width=gproz.toFixed(1)+"%";
     gfill.style.background = gproz<70 ? "#3ddc73" : (gproz<85 ? "#e0a83c" : "#ff3b3b");
@@ -366,10 +366,10 @@ async function tick(){
 
   const zeit=new Date(d.updated*1000).toLocaleTimeString();
   document.getElementById("log").textContent = d.picking
-    ? "HOVER-MENUE aktiv - bitte am PC die Ziele setzen ..."
-    : "Zuletzt erkannt: "+zeit;
+    ? "HOVER MENU active - please set targets on the PC ..."
+    : "Last detected: "+zeit;
   document.getElementById("ip").textContent=d.url;
- }catch(e){document.getElementById("log").textContent="Keine Verbindung zum PC";}
+ }catch(e){document.getElementById("log").textContent="No connection to PC";}
 }
 async function zielLock(){
  await fetch("/pick_region",{method:"POST"});
@@ -488,8 +488,8 @@ class Handler(BaseHTTPRequestHandler):
 
 
 def lese_zahl(bild):
-    """Liest eine Zahl aus dem Bild. Probiert normal UND invertiert (fuer helle
-    Schrift auf dunklem Hintergrund), jeweils schwarz-weiss umgewandelt."""
+    """Reads a number from the image. Tries both normal AND inverted (for light
+    text on a dark background), each converted to black and white."""
     grau = ImageOps.grayscale(bild)
     grau = grau.resize((grau.width * 6, grau.height * 6), Image.LANCZOS)
     grau = ImageOps.autocontrast(grau, cutoff=2)
@@ -505,7 +505,7 @@ def lese_zahl(bild):
 
 
 def fullscreen_auswahl(root, art):
-    """Vollbild-Rechteckauswahl fuer EIN Ziel. ESC bricht nur diese Auswahl ab."""
+    """Fullscreen rectangle selection for ONE target. ESC only cancels this selection."""
     with mss.mss() as sct:
         monitor = sct.monitors[0]
         shot = sct.grab(monitor)
@@ -514,7 +514,7 @@ def fullscreen_auswahl(root, art):
     win = tk.Toplevel(root)
     win.attributes("-fullscreen", True)
     win.attributes("-topmost", True)
-    titel = "ITEM-MENGE" if art == "item" else "TRAGGEWICHT"
+    titel = "ITEM COUNT" if art == "item" else "CARRY WEIGHT"
     farbe = "#3ddc73" if art == "item" else "#4fa8ff"
 
     bild_tk = ImageTk.PhotoImage(vollbild)
@@ -522,7 +522,7 @@ def fullscreen_auswahl(root, art):
                         highlightthickness=0)
     canvas.pack(fill="both", expand=True)
     canvas.create_image(0, 0, image=bild_tk, anchor="nw")
-    info = tk.Label(win, text=f"Rechteck um {titel} ziehen   (ESC = zurueck zum Menue)",
+    info = tk.Label(win, text=f"Drag a rectangle around the {titel}   (ESC = back to menu)",
                      fg=farbe, bg="black", font=("Consolas", 16, "bold"))
     info.place(x=12, y=12)
 
@@ -559,7 +559,7 @@ def fullscreen_auswahl(root, art):
 
 
 def ziel_menu():
-    """Hover-Menue am oberen Bildschirmrand mit 3 Knoepfen fuer die Doppel-Kalibrierung."""
+    """Hover menu at the top of the screen with 3 buttons for the dual-target calibration."""
     root = tk.Tk()
     root.withdraw()
     ergebnis = {"item": None, "gewicht": None}
@@ -572,7 +572,7 @@ def ziel_menu():
     toolbar.geometry(f"{bar_w}x{bar_h}+{(sw - bar_w) // 2}+16")
     toolbar.configure(bg="#08306b", highlightbackground="#1f4e8c", highlightthickness=2)
 
-    tk.Label(toolbar, text="NOVA SENTINEL  \u2014  Ziele setzen, dann Uebernehmen",
+    tk.Label(toolbar, text="NOVA SENTINEL  \u2014  Set targets, then Confirm",
              bg="#08306b", fg="#cfe3ff", font=("Segoe UI", 9, "bold")).pack(pady=(8, 4))
     row = tk.Frame(toolbar, bg="#08306b")
     row.pack()
@@ -596,9 +596,9 @@ def ziel_menu():
         toolbar.lift()
         toolbar.attributes("-topmost", True)
 
-    btn1 = tk.Button(row, text="1) Item-Menge", width=15, command=lambda: waehlen("item", btn1))
-    btn2 = tk.Button(row, text="2) Traggewicht", width=15, command=lambda: waehlen("gewicht", btn2))
-    btn3 = tk.Button(row, text="Uebernehmen", width=13, state="disabled", command=root.quit)
+    btn1 = tk.Button(row, text="1) Item Count", width=15, command=lambda: waehlen("item", btn1))
+    btn2 = tk.Button(row, text="2) Carry Weight", width=15, command=lambda: waehlen("gewicht", btn2))
+    btn3 = tk.Button(row, text="Confirm", width=13, state="disabled", command=root.quit)
     stil(btn1, False)
     stil(btn2, False)
     btn3.configure(bg="#274060", fg="#7fa8d9")
@@ -606,7 +606,7 @@ def ziel_menu():
     btn2.grid(row=0, column=1, padx=5, pady=6)
     btn3.grid(row=0, column=2, padx=5, pady=6)
 
-    toolbar.protocol("WM_DELETE_WINDOW", lambda: None)  # kein sofortiges Schliessen per X
+    toolbar.protocol("WM_DELETE_WINDOW", lambda: None)  # no immediate close via X
     root.mainloop()
     root.destroy()
     return ergebnis["item"], ergebnis["gewicht"]
@@ -625,11 +625,11 @@ def main():
         context.load_cert_chain(cert_pfad, key_pfad)
         server.socket = context.wrap_socket(server.socket, server_side=True)
     threading.Thread(target=server.serve_forever, daemon=True).start()
-    print(f"Oeffnen unter: {SCHEMA}://{ip_lokal()}:{PORT}/")
+    print(f"Open at: {SCHEMA}://{ip_lokal()}:{PORT}/")
     if USE_HTTPS:
-        print("Hinweis: Der Browser zeigt beim ersten Aufruf eine Zertifikatswarnung,")
-        print("das ist normal bei einem selbstsignierten Zertifikat. Siehe Chat fuer die Schritte.")
-    print("Beenden mit Strg+C.")
+        print("Note: the browser will show a certificate warning on first visit,")
+        print("that's normal for a self-signed certificate. See chat for the steps.")
+    print("Press Ctrl+C to stop.")
 
     letzter_roh, letzter_alarm = None, 0.0
     letzter_roh_g, letzter_alarm_gelb, letzter_alarm_rot = None, 0.0, 0.0
@@ -659,7 +659,7 @@ def main():
                         state["wert_gewicht"] = None
                         state["modus"] = "vorschau"
                         state["max_auto_pending"] = True
-                        print("Neue Ziele gesetzt:", neu_item, neu_gewicht)
+                        print("New targets set:", neu_item, neu_gewicht)
                     elif state["region"] is None:
                         state["modus"] = "auswahl"
                 continue
@@ -689,7 +689,7 @@ def main():
                     if state["max_auto_pending"]:
                         state["max"] = roh
                         state["max_auto_pending"] = False
-                        print("Max. Bestand automatisch gesetzt auf:", roh)
+                        print("Max stock automatically set to:", roh)
                 wert = state["wert"]
             letzter_roh = roh
 
@@ -706,8 +706,8 @@ def main():
                 wert_g = state["wert_gewicht"]
             letzter_roh_g = roh_g
 
-            print("Item:", roh, "| gueltig:", wert, " -- Gewicht:", roh_g, "| gueltig:", wert_g,
-                  "| Modus:", modus)
+            print("Item:", roh, "| valid:", wert, " -- Weight:", roh_g, "| valid:", wert_g,
+                  "| Mode:", modus)
 
             if modus == "aktiv":
                 # Item-Alarm
